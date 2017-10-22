@@ -4,6 +4,9 @@ import tkinter as tk
 import time
 import _thread
 import random
+from PIL import Image, ImageTk
+
+
 
 # Contants
 BLINK_COLOR = 'white'
@@ -24,9 +27,10 @@ DIRECTION_MAX = 12
 DIRECTION_STEP = 3
 FRAME_WIDTH = 54
 FRAME_HEIGHT = 83
+FRAME_DIFF = FRAME_HEIGHT - FRAME_WIDTH
 START_BUTTON_HEIGHT = 25
 TARGET_SIZE = 20
-
+STEP_SIZE = 20
 
 # Global variables
 LARGE_FONT = ("Verdana",10)
@@ -42,18 +46,26 @@ zo.text2 = 'Ꙩ Ꙩ','','',''
 zo.text3 = 'Ꙩ\nꙨ','','',''
 zo.win_x = 0
 zo.win_y = 0
-zo.moves = ([[20,0],[0,20],[-20,0],[0,-20]])           
+zo.moves = ([[STEP_SIZE,0],[0,STEP_SIZE],[-STEP_SIZE,0],[0,-STEP_SIZE]])           
 zo.direction = 12
 zo.exit_thread = False 
 zo.o_x0 = 0
 zo.o_y0 = 0
+#                            LEFT,EAST               LEFT,SOUTH     LEFT,WEST   LEFT,NORTH     RIGHT,EAST     RIGHT,SOUTH            RIGHT,WEST     RIGHT,NORTH
+zo.beebots_turn_border = ([[FRAME_DIFF,-FRAME_DIFF],[0,FRAME_DIFF] , [0,0] , [-FRAME_DIFF,0],[FRAME_DIFF,0],[-FRAME_DIFF,FRAME_DIFF],[0,-FRAME_DIFF],[0,0]])
 
-
+#                            LEFT,EAST                    LEFT,SOUTH                  LEFT,WEST                     LEFT,NORTH                  
+zo.beebots_turn_middle = ([[FRAME_DIFF/2,-FRAME_DIFF/2],[-FRAME_DIFF/2,FRAME_DIFF/2],[FRAME_DIFF/2,-FRAME_DIFF/2],[-FRAME_DIFF/2,FRAME_DIFF/2] \
+#                            RIGHT,EAST                   RIGHT,SOUTH                 RIGHT,WEST                    RIGHT,NORTH                              
+						  ,[FRAME_DIFF/2,-FRAME_DIFF/2],[-FRAME_DIFF/2,FRAME_DIFF/2],[FRAME_DIFF/2,-FRAME_DIFF/2],[-FRAME_DIFF/2,FRAME_DIFF/2]])
+ 
 class App:
 
 	def __init__ (self, master):
 	
-		self.target_id = None
+		#self.target_id = None
+		# Type of Beebots turning
+		zo.beebots_turn = zo.beebots_turn_border # Fill in the type of Beebots turning border or middle<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		master.title("Beebots")
 		
         #create canvas
@@ -73,7 +85,7 @@ class App:
 		self.start_button = tk.Button (frame1, text = " START", command = self.begin_now)
 		self.start_button.pack(side = tk.LEFT, padx=5)
 		# Creating the Place target button
-		self.start_button = tk.Button (frame1, text = "Placera bytet", command = self.place_target)
+		self.start_button = tk.Button (frame1, text = "Ny blomman", command = self.place_target)
 		self.start_button.pack(side = tk.TOP)
 		
 	# Creating the thing with the arrows
@@ -103,7 +115,7 @@ class App:
 		
 			zo.a["%0.2d"%(x)] = butn
 		
-	def do_buttons_direction (self, move):
+	def do_buttons_direction (self):
 		self.destroy_boxes()	
 			
 		for x in range(NMB_BUTTONS):
@@ -139,54 +151,58 @@ class App:
 				ws_down = butn.winfo_reqwidth()
 				
 			zo.a["%0.2d"%(x)] = butn
-				
-		if move:
-			if zo.direction == 12 or zo.direction == 6 :
-				zo.win_x +=14
-				zo.win_y -=14
-				self.frame.place(width = FRAME_WIDTH, height= FRAME_HEIGHT, x = zo.win_x, y = zo.win_y)
+		
 
-			else:
-				zo.win_x -=14
-				zo.win_y +=14
-				self.frame.place(width = FRAME_HEIGHT, height= FRAME_WIDTH, x = zo.win_x, y = zo.win_y)
 	
 	def vilken_direction(self, vart):
 		zo.the_way_to_go.append(vart)
 		
 		
 	def start_begin_now(self, frame, f_direction, check_position):
-		f_direction(False)
+		f_direction()
 				
 		for n in zo.the_way_to_go:
 		# exit for-loop if flag set
 			if zo.exit_thread: break
 			
 			lbbg = zo.a[n].cget("bg")
+			prev_direction = zo.direction
 			zo.a[n].config(bg = BLINK_COLOR)
 			# Move the box
 			if n == LEFT:
 				zo.direction -= DIRECTION_STEP
 				if zo.direction < DIRECTION_MIN : zo.direction = DIRECTION_MAX
-				f_direction(True)
 			elif n == RIGHT:
 				zo.direction += DIRECTION_STEP
 				if zo.direction > DIRECTION_MAX : zo.direction = DIRECTION_MIN
-				f_direction(True)
 			elif n == UP:
 				x,y = zo.moves[int(zo.direction/DIRECTION_STEP)-1]
 				zo.win_x += x
 				zo.win_y += y
 				if check_position(): zo.a[n].config(bg = 'maroon1')
-				frame.place(x = zo.win_x, y = zo.win_y)
 			else: #DOWN
 				x,y = zo.moves[int(zo.direction/DIRECTION_STEP)-1]
 				zo.win_x -= x
 				zo.win_y -= y
 				if check_position(): zo.a[n].config(bg = 'maroon1')
-				frame.place(x = zo.win_x, y = zo.win_y)
+				
+			if n == LEFT or n == RIGHT:
+				f_direction()
+			#Place frame when changing direction
+				turn = ((prev_direction/3) + 4*(int(n)-1))-1
+				turn_x, turn_y = zo.beebots_turn[int(turn)]
+				print("before zo.win_x, zo.win_y",zo.win_x, zo.win_y)
+				zo.win_x +=turn_x
+				zo.win_y +=turn_y
+				print("turn, n, turn_x, turn_y, zo.win_x, zo.win_y",int(turn),n, turn_x, turn_y, zo.win_x, zo.win_y)
 
-	
+				if zo.direction == 12 or zo.direction == 6 :
+					frame.place(width = FRAME_WIDTH, height= FRAME_HEIGHT)
+				else:
+					frame.place(width = FRAME_HEIGHT, height= FRAME_WIDTH)
+					
+			frame.place(x = zo.win_x, y = zo.win_y)
+			
 			time.sleep(0.5)
 			zo.a[n].config(bg = lbbg)
 			time.sleep(0.5)
@@ -194,12 +210,14 @@ class App:
 		#return the exit-flag to normal 
 		zo.exit_thread = False
 		
+				
+		
 	def begin_now(self):
 		self.reset_frame()
 		self.do_buttons ()
 		zo.exit_thread = False
 			
-		_thread.start_new_thread(App.start_begin_now,(None, self.frame, lambda move: self.do_buttons_direction(move), lambda: self.check_window_border() ))
+		_thread.start_new_thread(App.start_begin_now,(None, self.frame, lambda: self.do_buttons_direction(), lambda: self.check_window_border() ))
 		
 		
 	def reset_now(self):
@@ -261,13 +279,21 @@ class App:
 		
 	def place_target(self):
 		
-		if self.target_id: self.canvas1.delete(self.target_id)
+		#if self.target_id: self.canvas1.delete(self.target_id)
 		zo.o_x0 = random.randint(CANVAS_PAD_X, CANVAS_X-TARGET_SIZE)
 		zo.o_y0 = random.randint(CANVAS_PAD_X, CANVAS_Y - FRAME_HEIGHT-TARGET_SIZE)		
-		# Make oval and place it
-		#zo.o_x0 = 465 #302 #251
-		#zo.o_y0 = 445 #314 #289
-		self.target_id = self.canvas1.create_oval(zo.o_x0, zo.o_y0, zo.o_x0+TARGET_SIZE, zo.o_y0+TARGET_SIZE, fill='red', outline='red')
+		# Make target and place it
+		#zo.o_x0 = 218 #251
+		#zo.o_y0 = 350 #289
+		# To resize the image
+		#lbimage = Image.open('./flower.gif')
+		#lbimage = lbimage.resize((21,21), Image.ANTIALIAS)
+		#lbimage.save('./flower_size.gif')
+		
+		self.picture = ImageTk.PhotoImage(file = './flower_size.gif')
+		#self.target_id = self.canvas1.create_oval(zo.o_x0, zo.o_y0, zo.o_x0+TARGET_SIZE, zo.o_y0+TARGET_SIZE, fill='red', outline='red')
+		self.canvas1.create_image(zo.o_x0+ (TARGET_SIZE/2), zo.o_y0+(TARGET_SIZE/2), image = self.picture)
+		
 
 
 top = tk.Tk()
