@@ -7,7 +7,7 @@ import random
 from PIL import Image, ImageTk
 
 
-# Contants
+# Constants
 BLINK_COLOR = 'white'
 UP = '00'
 LEFT = '01'
@@ -193,10 +193,10 @@ class App:
 			#Place frame when changing direction
 				turn = ((prev_direction/3) + 4*(int(n)-1))-1
 				turn_x, turn_y = zo.beebots_turn[int(turn)]
-				print("before zo.win_x, zo.win_y",zo.win_x, zo.win_y)
+				#print("before zo.win_x, zo.win_y",zo.win_x, zo.win_y)
 				zo.win_x +=turn_x
 				zo.win_y +=turn_y
-				print("turn, n, turn_x, turn_y, zo.win_x, zo.win_y",int(turn),n, turn_x, turn_y, zo.win_x, zo.win_y)
+				#print("turn, n, turn_x, turn_y, zo.win_x, zo.win_y",int(turn),n, turn_x, turn_y, zo.win_x, zo.win_y)
 
 				if zo.direction == 12 or zo.direction == 6 :
 					frame.place(width = FRAME_WIDTH, height= FRAME_HEIGHT)
@@ -291,7 +291,7 @@ class App:
 		#lbimage = Image.open('./flower.gif')
 		#lbimage = lbimage.resize((21,21), Image.ANTIALIAS)
 		#lbimage.save('./flower_size.gif')
-		print("zo.o_x0,zo.o_y0",zo.o_x0,zo.o_y0)
+		#print("zo.o_x0,zo.o_y0",zo.o_x0,zo.o_y0)
 		self.picture = ImageTk.PhotoImage(file = './flower_size.gif')
 		#self.target_id = self.canvas1.create_oval(zo.o_x0, zo.o_y0, zo.o_x0+TARGET_SIZE, zo.o_y0+TARGET_SIZE, fill='red', outline='red')
 		self.canvas1.create_image(zo.o_x0+ (TARGET_SIZE/2), zo.o_y0+(TARGET_SIZE/2), image = self.picture)
