@@ -33,6 +33,9 @@ STEP_SIZE_20 = 20
 STEP_SIZE_40 = 40
 TARGET_SIZE = TARGET_SIZE_20
 STEP_SIZE = STEP_SIZE_40
+RASTER_ADJUST = STEP_SIZE-STEP_SIZE_20
+STOP_COLOR = 'red2'
+TARGET_AREA =100
 
 # Global variables
 LARGE_FONT = ("Verdana",10)
@@ -53,8 +56,12 @@ zo.direction = 12
 zo.exit_thread = False
 zo.o_x0 = 0
 zo.o_y0 = 0
-#                            LEFT,EAST               LEFT,SOUTH     LEFT,WEST   LEFT,NORTH     RIGHT,EAST     RIGHT,SOUTH            RIGHT,WEST     RIGHT,NORTH
-zo.beebots_turn_border = ([[FRAME_DIFF,-FRAME_DIFF],[0,FRAME_DIFF] , [0,0] , [-FRAME_DIFF,0],[FRAME_DIFF,0],[-FRAME_DIFF,FRAME_DIFF],[0,-FRAME_DIFF],[0,0]])
+zo.stopped_at_target = False
+
+#                            LEFT,EAST               LEFT,SOUTH     LEFT,WEST   LEFT,NORTH
+zo.beebots_turn_border = ([[FRAME_DIFF,-FRAME_DIFF],[0,FRAME_DIFF] , [0,0] , [-FRAME_DIFF,0]\
+#							RIGHT,EAST     RIGHT,SOUTH            RIGHT,WEST     RIGHT,NORTH
+						,[FRAME_DIFF,0],[-FRAME_DIFF,FRAME_DIFF],[0,-FRAME_DIFF],[0,0]])
 
 #                            LEFT,EAST                    LEFT,SOUTH                  LEFT,WEST                     LEFT,NORTH
 zo.beebots_turn_middle = ([[FRAME_DIFF/2,-FRAME_DIFF/2],[-FRAME_DIFF/2,FRAME_DIFF/2],[FRAME_DIFF/2,-FRAME_DIFF/2],[-FRAME_DIFF/2,FRAME_DIFF/2] \
@@ -75,8 +82,8 @@ class App:
 		self.canvas1.pack(side = tk.BOTTOM, anchor = tk.SW, padx = CANVAS_PAD_X, pady = CANVAS_PAD_Y)
        	# Create lines
 		for n in range (25):
-			self.canvas1.create_line(0, 6+(n*STEP_SIZE) , CANVAS_X, 6+(n * STEP_SIZE), fill='gray', dash=(1,))
-			self.canvas1.create_line(4+(n*STEP_SIZE), 6 , 4+(n*STEP_SIZE), CANVAS_Y, fill = 'gray', dash = (1,))
+			self.canvas1.create_line(0, 6+(n*STEP_SIZE)+RASTER_ADJUST , CANVAS_X, 6+(n * STEP_SIZE)+RASTER_ADJUST, fill='gray', dash=(1,))
+			self.canvas1.create_line((n*STEP_SIZE)-2+RASTER_ADJUST, 6 , (n*STEP_SIZE)-2+RASTER_ADJUST, CANVAS_Y, fill = 'gray', dash = (1,))
 
 		frame1 = tk.Frame (master)
 		frame1.pack(expand = 1, anchor = tk.N, fill = tk.X)
@@ -91,7 +98,7 @@ class App:
 		self.start_button.pack(side = tk.TOP)
 
 	# Creating the thing with the arrows
-		self.frame = tk.Frame (master, bg= 'red')
+		self.frame = tk.Frame (master, bg= "#D2D2D2")
 		self.reset_frame()
 		self.do_buttons ()
 
@@ -166,10 +173,13 @@ class App:
 		for n in zo.the_way_to_go:
 		# exit for-loop if flag set
 			if zo.exit_thread: break
-
+			_x0 = zo.win_x
+			_y0 = zo.win_y
+			#print("0- _x0, zo.win_x",_x0, zo.win_x)
+			#print("0-_y0, zo.win_y", _y0, zo.win_y)
 			lbbg = zo.a[n].cget("bg")
 			prev_direction = zo.direction
-			zo.a[n].config(bg = BLINK_COLOR)
+
 			# Move the box
 			if n == LEFT:
 				zo.direction -= DIRECTION_STEP
@@ -181,14 +191,18 @@ class App:
 				x,y = zo.moves[int(zo.direction/DIRECTION_STEP)-1]
 				zo.win_x += x
 				zo.win_y += y
-				if check_position(): zo.a[n].config(bg = 'maroon1')
+				#if check_position(): zo.a[n].config(bg = 'maroon1')
 			else: #DOWN
 				x,y = zo.moves[int(zo.direction/DIRECTION_STEP)-1]
 				zo.win_x -= x
 				zo.win_y -= y
-				if check_position(): zo.a[n].config(bg = 'maroon1')
+				#if check_position(): zo.a[n].config(bg = 'maroon1')
 
 			if n == LEFT or n == RIGHT:
+				if zo.direction == 12 or zo.direction == 6 :
+					frame.place(width = FRAME_WIDTH, height= FRAME_HEIGHT, x = zo.win_x, y = zo.win_y)
+				else:
+					frame.place(width = FRAME_HEIGHT, height= FRAME_WIDTH, x = zo.win_x, y = zo.win_y)
 				f_direction()
 			#Place frame when changing direction
 				turn = ((prev_direction/3) + 4*(int(n)-1))-1
@@ -196,35 +210,74 @@ class App:
 				#print("before zo.win_x, zo.win_y",zo.win_x, zo.win_y)
 				zo.win_x +=turn_x
 				zo.win_y +=turn_y
+				if check_position(): zo.a[n].config(bg = 'maroon1')
+				time.sleep(0.25)
 				#print("turn, n, turn_x, turn_y, zo.win_x, zo.win_y",int(turn),n, turn_x, turn_y, zo.win_x, zo.win_y)
+				frame.place(x = zo.win_x, y = zo.win_y)
 
-				if zo.direction == 12 or zo.direction == 6 :
-					frame.place(width = FRAME_WIDTH, height= FRAME_HEIGHT)
-				else:
-					frame.place(width = FRAME_HEIGHT, height= FRAME_WIDTH)
+			else: #UP and DOWN
+				check_position()
+				_x= 1 if _x0 - zo.win_x < 0  else -1
+				_y= 1 if _y0 - zo.win_y < 0  else -1
+				#print("1-_x, _x0, zo.win_x",_x, _x0, zo.win_x)
+				#print("1-_y, _y0, zo.win_y",_y, _y0, zo.win_y)
+				for m in range(int(abs(_x0-zo.win_x))):
+					#print("x", end="")
+					if _x0 == zo.win_x : break
+					_x0 += _x
+					frame.place(x = _x0)
+					time.sleep(0.05)
+				#print("")
+				for o in range(int(abs(_y0-zo.win_y))):
+					#print("y", end="")
+					if _y0 == zo.win_y : break
+					_y0 += _y
+					frame.place(y = _y0)
+					time.sleep(0.05)
+				#print("")
+				#print("2-_x, _x0, zo.win_x",_x, _x0, zo.win_x)
+				#print("2-_y, _y0, zo.win_y",_y, _y0, zo.win_y)
 
-			frame.place(x = zo.win_x, y = zo.win_y)
+			if check_position():
+				zo.a[n].config(bg = 'maroon1')
+			else:
+				zo.a[n].config(bg = BLINK_COLOR)
 
-			time.sleep(0.5)
+			time.sleep(0.3)
 			zo.a[n].config(bg = lbbg)
-			time.sleep(0.5)
+			#time.sleep(0.15)
 
 		#return the exit-flag to normal
 		zo.exit_thread = False
-
-
+		_thread.start_new_thread(App.check_if_stopped_at_target,(None,check_position))
 
 	def begin_now(self):
 		self.reset_frame()
 		self.do_buttons ()
+		zo.stopped_at_target = False
 		zo.exit_thread = False
-
 		_thread.start_new_thread(App.start_begin_now,(None, self.frame, lambda: self.do_buttons_direction(), lambda: self.check_window_border() ))
+
+
+
+	def check_if_stopped_at_target(self, check_position):
+		zo.stopped_at_target = True
+		while zo.stopped_at_target:
+			if check_position():
+				for n in (UP, DOWN, LEFT, RIGHT):
+					zo.a[n].config(bg = 'red')
+				if not zo.stopped_at_target : break
+				time.sleep(0.5)
+				for n in (UP, DOWN, LEFT, RIGHT):
+					zo.a[n].config(bg = 'white')
+				if not zo.stopped_at_target : break
+				time.sleep(0.5)
 
 
 	def reset_now(self):
 		zo.the_way_to_go = []
 		zo.exit_thread = True
+		zo.stopped_at_target = False
 		time.sleep(0.2) # Time for the task to end
 		self.reset_frame()
 		self.do_buttons()
@@ -242,8 +295,7 @@ class App:
 			zo.a[x].destroy()
 
 	def check_window_border (self):
-
-		# Check end of TOP window
+	# Check end of TOP window
 		w_req, h_req = top.winfo_width(), top.winfo_height()
 		if zo.direction == 12 or zo.direction == 6 :
 			if 0 > zo.win_x :
@@ -282,8 +334,8 @@ class App:
 	def place_target(self):
 
 		#if self.target_id: self.canvas1.delete(self.target_id)
-		zo.o_x0 = random.randint(CANVAS_PAD_X, CANVAS_X-TARGET_SIZE)
-		zo.o_y0 = random.randint(CANVAS_PAD_X, CANVAS_Y - FRAME_HEIGHT-TARGET_SIZE)
+		zo.o_x0 = random.randint(CANVAS_PAD_X + TARGET_AREA, CANVAS_X-TARGET_SIZE -TARGET_AREA)
+		zo.o_y0 = random.randint(CANVAS_PAD_X+TARGET_AREA, CANVAS_Y - FRAME_HEIGHT-TARGET_SIZE-TARGET_AREA)
 		# Make target and place it
 		#zo.o_x0 = 218 #251
 		#zo.o_y0 = 350 #289
