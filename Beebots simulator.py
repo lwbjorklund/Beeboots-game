@@ -7,7 +7,6 @@ import random
 from PIL import Image, ImageTk
 
 
-
 # Contants
 BLINK_COLOR = 'white'
 UP = '00'
