@@ -36,6 +36,8 @@ STEP_SIZE = STEP_SIZE_40
 RASTER_ADJUST = STEP_SIZE-STEP_SIZE_20
 STOP_COLOR = 'red2'
 TARGET_AREA =100
+TARGET_FOUND_COLOR_1 = 'yellow2'
+TARGET_FOUND_COLOR_2 = 'black'
 
 # Global variables
 LARGE_FONT = ("Verdana",10)
@@ -210,7 +212,7 @@ class App:
 				#print("before zo.win_x, zo.win_y",zo.win_x, zo.win_y)
 				zo.win_x +=turn_x
 				zo.win_y +=turn_y
-				if check_position(): zo.a[n].config(bg = 'maroon1')
+				if check_position(): zo.a[UP].config(bg = 'maroon1')
 				time.sleep(0.25)
 				#print("turn, n, turn_x, turn_y, zo.win_x, zo.win_y",int(turn),n, turn_x, turn_y, zo.win_x, zo.win_y)
 				frame.place(x = zo.win_x, y = zo.win_y)
@@ -238,14 +240,14 @@ class App:
 				#print("2-_x, _x0, zo.win_x",_x, _x0, zo.win_x)
 				#print("2-_y, _y0, zo.win_y",_y, _y0, zo.win_y)
 
-			if check_position():
-				zo.a[n].config(bg = 'maroon1')
-			else:
-				zo.a[n].config(bg = BLINK_COLOR)
+				if check_position():
+					zo.a[n].config(bg = 'maroon1')
+				else:
+					zo.a[n].config(bg = BLINK_COLOR)
 
-			time.sleep(0.3)
+			time.sleep(0.15)
 			zo.a[n].config(bg = lbbg)
-			#time.sleep(0.15)
+			time.sleep(0.15)
 
 		#return the exit-flag to normal
 		zo.exit_thread = False
@@ -264,12 +266,12 @@ class App:
 		zo.stopped_at_target = True
 		while zo.stopped_at_target:
 			if check_position():
-				for n in (UP, DOWN, LEFT, RIGHT):
-					zo.a[n].config(bg = 'red')
+				for n in (LEFT, RIGHT): #UP, DOWN,
+					zo.a[n].config(bg = TARGET_FOUND_COLOR_1)
 				if not zo.stopped_at_target : break
 				time.sleep(0.5)
-				for n in (UP, DOWN, LEFT, RIGHT):
-					zo.a[n].config(bg = 'white')
+				for n in (LEFT, RIGHT):#UP, DOWN,
+					zo.a[n].config(bg = TARGET_FOUND_COLOR_2)
 				if not zo.stopped_at_target : break
 				time.sleep(0.5)
 
