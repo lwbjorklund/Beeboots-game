@@ -8,46 +8,54 @@ from PIL import Image, ImageTk
 
 
 # Constants
+START_DIRECTION = 3
 BLINK_COLOR = 'white'
-UP = '00'
+FORWARD = '00'
 LEFT = '01'
 RIGHT = '02'
-DOWN = '03'
-TOP_GEOMETRY = '500x500+0+500'
-TOP_X = 500
-TOP_Y = 500
-CANVAS_X = 485
-CANVAS_Y = 465
+BACKWARD = '03'
+STEP_SIZE_20 = 20
+STEP_SIZE_40 = 40
+STEP_SIZE_80 = 80
+STEP_SIZE = STEP_SIZE_80
+START_BUTTON_HEIGHT = 25
+WINDOW_TITLE_HIGHT = 0
 CANVAS_PAD_X = 5
 CANVAS_PAD_Y = 1
+TOP_X_GEOMETRY = (6*STEP_SIZE)+2*CANVAS_PAD_X
+TOP_Y_GEOMETRY =TOP_X_GEOMETRY+START_BUTTON_HEIGHT+WINDOW_TITLE_HIGHT
+TOP_GEOMETRY = '500x500+0+400'
+TOP_X = 500
+TOP_Y = 500
+CANVAS_X = 6*STEP_SIZE
+CANVAS_Y = 6*STEP_SIZE
+CANVAS_BAKGROUND = "#D2D2D2" #Gray
 NMB_BUTTONS = 4
 DIRECTION_MIN = 3
 DIRECTION_MAX = 12
 DIRECTION_STEP = 3
-FRAME_WIDTH = 54
-FRAME_HEIGHT = 83
+FRAME_BAKGROUND = 'yellow2'
+FRAME_WIDTH = 78
+FRAME_HEIGHT = FRAME_WIDTH # Make Beeboot as a square
 FRAME_DIFF = FRAME_HEIGHT - FRAME_WIDTH
-START_BUTTON_HEIGHT = 25
 TARGET_SIZE_20 = 20
-STEP_SIZE_20 = 20
-STEP_SIZE_40 = 40
 TARGET_SIZE = TARGET_SIZE_20
-STEP_SIZE = STEP_SIZE_40
-RASTER_ADJUST = STEP_SIZE-STEP_SIZE_20
+RASTER_ADJUST_Y = 0 #STEP_SIZE-STEP_SIZE_20
+RASTER_ADJUST_X = 0 #STEP_SIZE-STEP_SIZE_20
 STOP_COLOR = 'red2'
-TARGET_AREA =100
+TARGET_AREA = 100
 TARGET_FOUND_COLOR_1 = 'yellow2'
 TARGET_FOUND_COLOR_2 = 'black'
 
 # Global variables
-LARGE_FONT = ("Verdana",10)
+LARGE_FONT = ("Verdana",9)
 
 class _zo : pass
 zo = _zo()
 zo.a = {}
 zo.the_way_to_go = []
 zo.color = "blue","red","green","yellow","gray"
-zo.color2 = "yellow2","black","black","yellow2"
+zo.color2 = "yellow2","black","black","yellow2" #"orange","dark violet","navy","red"
 zo.text = '↑','←','→','↓'
 zo.text2 = 'Ꙩ Ꙩ','','',''
 zo.text3 = 'Ꙩ\nꙨ','','',''
@@ -59,6 +67,7 @@ zo.exit_thread = False
 zo.o_x0 = 0
 zo.o_y0 = 0
 zo.stopped_at_target = False
+zo.at_border = False
 
 #                            LEFT,EAST               LEFT,SOUTH     LEFT,WEST   LEFT,NORTH
 zo.beebots_turn_border = ([[FRAME_DIFF,-FRAME_DIFF],[0,FRAME_DIFF] , [0,0] , [-FRAME_DIFF,0]\
@@ -80,12 +89,14 @@ class App:
 		master.title("Beebots")
 
         #create canvas
-		self.canvas1 = tk.Canvas(master, relief = tk.FLAT, background = "#D2D2D2", width = CANVAS_X, height = CANVAS_Y)
+		self.canvas1 = tk.Canvas(master, relief = tk.FLAT, background = CANVAS_BAKGROUND, width = CANVAS_X, height = CANVAS_Y)
 		self.canvas1.pack(side = tk.BOTTOM, anchor = tk.SW, padx = CANVAS_PAD_X, pady = CANVAS_PAD_Y)
+		print(self.canvas1.winfo_geometry())
        	# Create lines
-		for n in range (25):
-			self.canvas1.create_line(0, 6+(n*STEP_SIZE)+RASTER_ADJUST , CANVAS_X, 6+(n * STEP_SIZE)+RASTER_ADJUST, fill='gray', dash=(1,))
-			self.canvas1.create_line((n*STEP_SIZE)-2+RASTER_ADJUST, 6 , (n*STEP_SIZE)-2+RASTER_ADJUST, CANVAS_Y, fill = 'gray', dash = (1,))
+		nmb_raster_lines = CANVAS_X/STEP_SIZE
+		for n in range (int(nmb_raster_lines)):
+			self.canvas1.create_line(0, (n*STEP_SIZE)+RASTER_ADJUST_Y , CANVAS_X, (n * STEP_SIZE)+RASTER_ADJUST_Y, fill='gray', dash=(1,))
+			self.canvas1.create_line((n*STEP_SIZE)+RASTER_ADJUST_X, 6 , (n*STEP_SIZE)+RASTER_ADJUST_X, CANVAS_Y, fill = 'gray', dash = (1,))
 
 		frame1 = tk.Frame (master)
 		frame1.pack(expand = 1, anchor = tk.N, fill = tk.X)
@@ -100,85 +111,92 @@ class App:
 		self.start_button.pack(side = tk.TOP)
 
 	# Creating the thing with the arrows
-		self.frame = tk.Frame (master, bg= "#D2D2D2")
+		self.frame = tk.Frame (master, bg= FRAME_BAKGROUND)
 		self.reset_frame()
 		self.do_buttons ()
 
 
 	def do_buttons (self):
-
+		print("do_buttons IN")
 		for x in range(NMB_BUTTONS):
 			butn = tk.Button(self.frame, bg=zo.color[x], font=LARGE_FONT, text = zo.text[x])
-			if x == 0:
-				butn.config(command = lambda: self.vilken_direction(UP))
-				butn.grid(column=0, row=0, sticky = tk.N, columnspan = 2, ipadx = 34/2)
+			if x == int(FORWARD):
+				butn.config(command = lambda: self.vilken_direction(FORWARD))
+				if zo.direction == 9 	: butn.grid(column=0, row=0, rowspan = 2, ipadx = 1, ipady = 27); butn.config(text = zo.text[x+1])
+				elif zo.direction == 3 	: butn.grid(column=3, row=0, rowspan = 2, ipadx = 1, ipady = 27); butn.config(text = zo.text[x+2])
+				elif zo.direction == 12 : butn.grid(column=0, row=0, columnspan = 2, ipadx = 30, ipady = 1); butn.config(text = zo.text[x])
+				else 					: butn.grid(column=0, row=3, columnspan = 2, ipadx = 30, ipady = 1); butn.config(text = zo.text[x+3])
 
-			elif x == 1:
-				butn.config(command = lambda: self.vilken_direction(LEFT))
-				butn.grid(column=0, row=1, sticky = tk.W, ipadx = 1)
-			elif x == 2:
-				butn.config(command = lambda: self.vilken_direction(RIGHT))
-				butn.grid(column=1, row=1, sticky = tk.E, ipadx = 1)
-
-			else:
-				butn.config(command = lambda: self.vilken_direction(DOWN))
-				butn.grid(column=0, row=3, sticky = tk.S, columnspan = 2, ipadx = 34/2)
-
-			zo.a["%0.2d"%(x)] = butn
-
-	def do_buttons_direction (self):
-		self.destroy_boxes()
-
-		for x in range(NMB_BUTTONS):
-			butn = tk.Button(self.frame, bg=zo.color2[x], font=LARGE_FONT, text = zo.text2[x], relief=tk.FLAT)
-			if x == int(UP):
-				if zo.direction == 9 : butn.grid(column=0, row=0, sticky = tk.W, rowspan = 2, ipady = 12/2, ipadx = 8/2) ; butn.config(text = zo.text3[x])
-				elif zo.direction == 3 : butn.grid(column=3, row=0, sticky = tk.E, rowspan = 2, ipady = 12/2, ipadx = 8/2) ; butn.config(text = zo.text3[x])
-				elif zo.direction == 12 : butn.grid(column=0, row=0, sticky = tk.N, columnspan = 2, ipadx = TARGET_SIZE/2)# 34/2
-				else : butn.grid(column=0, row=3, sticky = tk.S, columnspan = 2, ipadx = TARGET_SIZE/2)# 34/2
-				hs_up = butn.winfo_reqheight()
-				ws_up = butn.winfo_reqwidth()
+			elif x== int(BACKWARD): # BACKWARD
+				butn.config(command = lambda: self.vilken_direction(BACKWARD))
+				if zo.direction == 9 	: butn.grid(column=3, row=0, rowspan = 2, ipadx = 1, ipady = 27); butn.config(text = zo.text[x-1])
+				elif zo.direction == 3 	: butn.grid(column=0, row=0, rowspan = 2, ipadx = 1, ipady = 27); butn.config(text = zo.text[x-2])
+				elif zo.direction == 12 : butn.grid(column=0, row=3, columnspan = 2, ipadx = 30, ipady = 1); butn.config(text = zo.text[x])
+				else 					: butn.grid(column=0, row=0, columnspan = 2, ipadx = 30, ipady = 1); butn.config(text = zo.text[x-3])
 
 			elif x == int(LEFT):
-				if zo.direction == 9 : butn.grid(column=1, row=1, sticky = tk.S, ipadx = 18/2)
-				elif zo.direction == 3 : butn.grid(column=1, row=0, sticky = tk.N, ipadx = 18/2)
-				elif zo.direction == 12 : butn.grid(column=0, row=1, sticky = tk.W, ipadx = 18/2)
-				else : butn.grid(column=1, row=1, sticky = tk.E, ipadx = 18/2)
+				butn.config(command = lambda: self.vilken_direction(LEFT))
+				if zo.direction == 9 	: butn.grid(column=1, row=1, ipady = 8, ipadx = 4); butn.config(text = zo.text[x+2])
+				elif zo.direction == 3 	: butn.grid(column=1, row=0, ipady = 8, ipadx = 4); butn.config(text = zo.text[x-1])
+				elif zo.direction == 12 : butn.grid(column=0, row=1, ipadx = 9); butn.config(text = zo.text[x])
+				else 					: butn.grid(column=1, row=1, ipadx = 9); butn.config(text = zo.text[x+1])
 
 			elif x == int(RIGHT):
-				if zo.direction == 9 : butn.grid(column=1, row=0, sticky = tk.N, ipadx = 18/2)
-				elif zo.direction == 3 : butn.grid(column=1, row=1, sticky = tk.S, ipadx = 18/2)
-				elif zo.direction == 12 : butn.grid(column=1, row=1, sticky = tk.E, ipadx = 14/2)# 2
-				else : butn.grid(column=0, row=1, sticky = tk.W, ipadx = 14/2)# 2
-				hs_right = butn.winfo_reqheight()
-				ws_right = butn.winfo_reqwidth()
-
-			else:
-				if zo.direction == 9 : butn.grid(column=3, row=0, sticky = tk.E, rowspan = 2, ipady = 28/2, ipadx = 16/2)
-				elif zo.direction == 3 : butn.grid(column=0, row=0, sticky = tk.W, rowspan = 2, ipady = 28/2, ipadx = 16/2)
-				elif zo.direction == 12 : butn.grid(column=0, row=3, sticky = tk.S, columnspan = 2, ipadx = 44/2)# 34/2
-				else : butn.grid(column=0, row=0, sticky = tk.N, columnspan = 2, ipadx = 44/2)# 34/2
-				hs_down = butn.winfo_reqheight()
-				ws_down = butn.winfo_reqwidth()
+				butn.config(command = lambda: self.vilken_direction(RIGHT))
+				if zo.direction == 9 	: butn.grid(column=1, row=0, ipady = 8, ipadx = 4); butn.config(text = zo.text[x-2])
+				elif zo.direction == 3 	: butn.grid(column=1, row=1, ipady = 8, ipadx = 4); butn.config(text = zo.text[x+1])
+				elif zo.direction == 12 : butn.grid(column=1, row=1, ipadx = 9); butn.config(text = zo.text[x])
+				else 					: butn.grid(column=0, row=1, ipadx = 9); butn.config(text = zo.text[x-1])
 
 			zo.a["%0.2d"%(x)] = butn
+		print("do_buttons OUT")
 
+	def do_buttons_direction (self):
+		print("do_buttons_direction IN")
+		self.destroy_boxes()
+		for x in range(NMB_BUTTONS):
+			butn = tk.Button(self.frame, bg=zo.color2[x], font=LARGE_FONT, text = zo.text2[x], relief=tk.FLAT)
 
+			if x == int(FORWARD):
+				if zo.direction == 9 	: butn.grid(column=0, row=0, rowspan = 2, ipadx = 4, ipady = 24) ; butn.config(text = zo.text3[x])
+				elif zo.direction == 3 	: butn.grid(column=3, row=0, rowspan = 2, ipadx = 4, ipady = 24) ; butn.config(text = zo.text3[x])
+				elif zo.direction == 12 : butn.grid(column=0, row=0, columnspan = 2, ipadx = 24, ipady = 1)
+				else 					: butn.grid(column=0, row=3, columnspan = 2, ipadx = 24, ipady = 1)
+			elif x== int(BACKWARD): # BACKWARD
+				if zo.direction == 9 	: butn.grid(column=3, row=0, rowspan = 2, ipadx = 7, ipady = 31)
+				elif zo.direction == 3 	: butn.grid(column=0, row=0, rowspan = 2, ipadx = 7, ipady = 31)
+				elif zo.direction == 12 : butn.grid(column=0, row=3, columnspan = 2, ipadx = 34, ipady = 1)
+				else 					: butn.grid(column=0, row=0, columnspan = 2, ipadx = 34, ipady = 1)
+			elif x == int(LEFT):
+				if zo.direction == 9 	: butn.grid(column=1, row=1, ipadx = 6, ipady = 10)
+				elif zo.direction == 3 	: butn.grid(column=1, row=0, ipadx = 6, ipady = 8)
+				elif zo.direction == 12 : butn.grid(column=0, row=1, ipadx = 14)
+				else 					: butn.grid(column=1, row=1, ipadx = 14)
+			elif x == int(RIGHT):
+				if zo.direction == 9 	: butn.grid(column=1, row=0, ipadx = 6, ipady = 8)
+				elif zo.direction == 3 	: butn.grid(column=1, row=1, ipadx = 6, ipady = 10)
+				elif zo.direction == 12 : butn.grid(column=1, row=1, ipadx = 14)
+				else 					: butn.grid(column=0, row=1, ipadx = 14)
+
+			zo.a["%0.2d"%(x)] = butn
+		print("do_buttons_direction OUT")
 
 	def vilken_direction(self, vart):
 		zo.the_way_to_go.append(vart)
+		print("vilken_direction: zo.the_way_to_go",zo.the_way_to_go)
 
 
 	def start_begin_now(self, frame, f_direction, check_position):
+		print("start_begin_now IN")
 		f_direction()
-
+		#print("zo.the_way_to_go",zo.the_way_to_go)
 		for n in zo.the_way_to_go:
 		# exit for-loop if flag set
 			if zo.exit_thread: break
 			_x0 = zo.win_x
 			_y0 = zo.win_y
-			#print("0- _x0, zo.win_x",_x0, zo.win_x)
-			#print("0-_y0, zo.win_y", _y0, zo.win_y)
+			#print("0- n _x0, zo.win_x",n, _x0, zo.win_x)
+			#print("0-n _y0, zo.win_y",n, _y0, zo.win_y)
 			lbbg = zo.a[n].cget("bg")
 			prev_direction = zo.direction
 
@@ -189,16 +207,21 @@ class App:
 			elif n == RIGHT:
 				zo.direction += DIRECTION_STEP
 				if zo.direction > DIRECTION_MAX : zo.direction = DIRECTION_MIN
-			elif n == UP:
+			elif n == FORWARD:
+				#print("FORWARD    zo.direction, zo.moves",zo.direction, zo.moves)
 				x,y = zo.moves[int(zo.direction/DIRECTION_STEP)-1]
+				#print("x,y", x,y)
 				zo.win_x += x
 				zo.win_y += y
 				#if check_position(): zo.a[n].config(bg = 'maroon1')
-			else: #DOWN
+			else: #BACKWARD
+				#print("BACKWARD  zo.direction, zo.moves",zo.direction, zo.moves)
 				x,y = zo.moves[int(zo.direction/DIRECTION_STEP)-1]
 				zo.win_x -= x
 				zo.win_y -= y
 				#if check_position(): zo.a[n].config(bg = 'maroon1')
+			#print("1- _x0, zo.win_x",_x0, zo.win_x)
+			#print("1-_y0, zo.win_y", _y0, zo.win_y)
 
 			if n == LEFT or n == RIGHT:
 				if zo.direction == 12 or zo.direction == 6 :
@@ -212,12 +235,12 @@ class App:
 				#print("before zo.win_x, zo.win_y",zo.win_x, zo.win_y)
 				zo.win_x +=turn_x
 				zo.win_y +=turn_y
-				if check_position(): zo.a[UP].config(bg = 'maroon1')
-				time.sleep(0.25)
+				if check_position(): zo.a[FORWARD].config(bg = 'maroon1')
+				#time.sleep(0.25)
 				#print("turn, n, turn_x, turn_y, zo.win_x, zo.win_y",int(turn),n, turn_x, turn_y, zo.win_x, zo.win_y)
 				frame.place(x = zo.win_x, y = zo.win_y)
 
-			else: #UP and DOWN
+			else: #FORWARD and BACKWARD
 				check_position()
 				_x= 1 if _x0 - zo.win_x < 0  else -1
 				_y= 1 if _y0 - zo.win_y < 0  else -1
@@ -242,6 +265,8 @@ class App:
 
 				if check_position():
 					zo.a[n].config(bg = 'maroon1')
+				elif zo.at_border == True:
+					zo.a[n].config(bg = STOP_COLOR)
 				else:
 					zo.a[n].config(bg = BLINK_COLOR)
 
@@ -252,10 +277,11 @@ class App:
 		#return the exit-flag to normal
 		zo.exit_thread = False
 		_thread.start_new_thread(App.check_if_stopped_at_target,(None,check_position))
+		print("start_begin_now OUT")
 
 	def begin_now(self):
 		self.reset_frame()
-		self.do_buttons ()
+		self.do_buttons () # Varför behövs detta anrop?
 		zo.stopped_at_target = False
 		zo.exit_thread = False
 		_thread.start_new_thread(App.start_begin_now,(None, self.frame, lambda: self.do_buttons_direction(), lambda: self.check_window_border() ))
@@ -263,60 +289,61 @@ class App:
 
 
 	def check_if_stopped_at_target(self, check_position):
+		print("check_if_stopped_at_target IN")
 		zo.stopped_at_target = True
 		while zo.stopped_at_target:
 			if check_position():
-				for n in (LEFT, RIGHT): #UP, DOWN,
+				for n in (LEFT, RIGHT): #FORWARD, BACKWARD,
 					zo.a[n].config(bg = TARGET_FOUND_COLOR_1)
 				if not zo.stopped_at_target : break
-				time.sleep(0.5)
-				for n in (LEFT, RIGHT):#UP, DOWN,
+				time.sleep(0.15)
+				for n in (LEFT, RIGHT):#FORWARD, BACKWARD,
 					zo.a[n].config(bg = TARGET_FOUND_COLOR_2)
 				if not zo.stopped_at_target : break
-				time.sleep(0.5)
-
+				time.sleep(0.15)
+		print("check_if_stopped_at_target OUT")
 
 	def reset_now(self):
 		zo.the_way_to_go = []
 		zo.exit_thread = True
 		zo.stopped_at_target = False
-		time.sleep(0.2) # Time for the task to end
+		time.sleep(0.5) # Time for the task to end
 		self.reset_frame()
 		self.do_buttons()
 
 	def reset_frame (self):
 		self.destroy_boxes()
-
-		self._win_x, self._win_y = TOP_X/2-FRAME_WIDTH/2, TOP_Y-FRAME_HEIGHT
+		self._win_x, self._win_y = CANVAS_PAD_X+1, START_BUTTON_HEIGHT+ CANVAS_PAD_Y+5
+		# OP_X/2-FRAME_WIDTH/2, TOP_Y-FRAME_HEIGHT
 		zo.win_x, zo.win_y = self._win_x, self._win_y  #-14   +14
 		self.frame.place(width = FRAME_WIDTH, height= FRAME_HEIGHT, x = self._win_x, y = self._win_y)
-		zo.direction = 12
+		zo.direction = START_DIRECTION
 
 	def destroy_boxes (self):
+		#print("knappar", zo.a)
 		for x in zo.a:
 			zo.a[x].destroy()
+			#print("destroy knappar",x)
+		#time.sleep(10)
 
-	def check_window_border (self):
+	def check_window_border (self): # return True if within target
+		print("check_window_border IN")
 	# Check end of TOP window
+		zo.at_border = False
 		w_req, h_req = top.winfo_width(), top.winfo_height()
+		#print("1-w_req,zo.win_x , offset, new_x",w_req,zo.win_x,-FRAME_WIDTH-CANVAS_PAD_X,w_req-FRAME_WIDTH-CANVAS_PAD_X)
+		#print("1-h_req,zo.win_y ",h_req,zo.win_y)
 		if zo.direction == 12 or zo.direction == 6 :
-			if 0 > zo.win_x :
-				zo.win_x = 0
-			elif zo.win_x > w_req - FRAME_WIDTH:
-				zo.win_x = w_req - FRAME_WIDTH
-			if START_BUTTON_HEIGHT > zo.win_y:
-				zo.win_y = START_BUTTON_HEIGHT
-			elif zo.win_y > h_req - FRAME_HEIGHT:
-				zo.win_y = h_req-FRAME_HEIGHT
+			if   zo.win_x < CANVAS_PAD_X : 					  zo.win_x = CANVAS_PAD_X; zo.at_border = True
+			elif zo.win_x >= w_req - FRAME_WIDTH-CANVAS_PAD_X: zo.win_x = w_req - FRAME_WIDTH-CANVAS_PAD_X; zo.at_border = True
+			if   zo.win_y < START_BUTTON_HEIGHT+6: 			  zo.win_y = START_BUTTON_HEIGHT+6; zo.at_border = True
+			elif zo.win_y >= h_req - FRAME_HEIGHT-CANVAS_PAD_X:
+				zo.win_y = h_req-FRAME_HEIGHT-CANVAS_PAD_X; zo.at_border = True
 		else:
-			if 0 > zo.win_x :
-				zo.win_x = 0
-			elif zo.win_x > w_req - FRAME_HEIGHT:
-				zo.win_x = w_req-FRAME_HEIGHT
-			if START_BUTTON_HEIGHT > zo.win_y:
-				zo.win_y = START_BUTTON_HEIGHT
-			elif zo.win_y > h_req - FRAME_WIDTH:
-				zo.win_y = h_req-FRAME_WIDTH
+			if   zo.win_x < CANVAS_PAD_X:					  zo.win_x = CANVAS_PAD_X; zo.at_border = True
+			elif zo.win_x >= w_req - FRAME_HEIGHT-CANVAS_PAD_X:zo.win_x = w_req-FRAME_HEIGHT-CANVAS_PAD_X; zo.at_border = True
+			if   zo.win_y < START_BUTTON_HEIGHT:			  zo.win_y = START_BUTTON_HEIGHT; zo.at_border = True
+			elif zo.win_y >= h_req - FRAME_WIDTH-CANVAS_PAD_Y: zo.win_y = h_req-FRAME_WIDTH-CANVAS_PAD_Y; zo.at_border = True
 
 		# Check also position from target
 		target_center_x = zo.o_x0 + TARGET_SIZE/2
@@ -329,15 +356,22 @@ class App:
 
 		if zo.win_x + target_xlength-(TARGET_SIZE/2) > (target_center_x+5) >= zo.win_x+(TARGET_SIZE/2):
 			if zo.win_y + target_ylength-(TARGET_SIZE/2) >= (target_center_y+31) > zo.win_y+(TARGET_SIZE/2):
+				print("return True")
+				print("check_window_border OUT")
 				return True
-
+		#print("2-w_req,zo.win_x , offset",w_req,zo.win_x,-FRAME_WIDTH-(CANVAS_PAD_X))
+		#print("2-h_req,zo.win_y ",h_req,zo.win_y)
+		print("check_window_border OUT")
 		return False
 
 	def place_target(self):
 
 		#if self.target_id: self.canvas1.delete(self.target_id)
-		zo.o_x0 = random.randint(CANVAS_PAD_X + TARGET_AREA, CANVAS_X-TARGET_SIZE -TARGET_AREA)
-		zo.o_y0 = random.randint(CANVAS_PAD_X+TARGET_AREA, CANVAS_Y - FRAME_HEIGHT-TARGET_SIZE-TARGET_AREA)
+		#zo.o_x0 = random.randint(CANVAS_PAD_X + TARGET_AREA, CANVAS_X-TARGET_SIZE -TARGET_AREA)
+		#zo.o_y0 = random.randint(CANVAS_PAD_X+TARGET_AREA, CANVAS_Y - FRAME_HEIGHT-TARGET_SIZE-TARGET_AREA)
+		zo.o_x0 = random.randint(0,(CANVAS_X/STEP_SIZE)-1)*STEP_SIZE+(STEP_SIZE/2)-TARGET_SIZE/2
+		zo.o_y0 = random.randint(0,(CANVAS_X/STEP_SIZE)-1)*STEP_SIZE+(STEP_SIZE/2)-TARGET_SIZE/2
+
 		# Make target and place it
 		#zo.o_x0 = 218 #251
 		#zo.o_y0 = 350 #289
@@ -354,6 +388,8 @@ class App:
 
 top = tk.Tk()
 top.geometry(TOP_GEOMETRY)
+geo = str(TOP_X_GEOMETRY)+'x'+str(TOP_Y_GEOMETRY)
+top.geometry(geo)
 app = App(top)
 
 
