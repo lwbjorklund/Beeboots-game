@@ -212,31 +212,26 @@ class App:
 				#print("x,y", x,y)
 				zo.win_x += x
 				zo.win_y += y
-				#if check_position(): zo.a[n].config(bg = 'maroon1')
 			else: #BACKWARD
 				#print("BACKWARD  zo.direction, zo.moves",zo.direction, zo.moves)
 				x,y = zo.moves[int(zo.direction/DIRECTION_STEP)-1]
 				zo.win_x -= x
 				zo.win_y -= y
-				#if check_position(): zo.a[n].config(bg = 'maroon1')
 			#print("1- _x0, zo.win_x",_x0, zo.win_x)
 			#print("1-_y0, zo.win_y", _y0, zo.win_y)
-
 			if n == LEFT or n == RIGHT:
 				if zo.direction == 12 or zo.direction == 6 :
 					frame.place(width = FRAME_WIDTH, height= FRAME_HEIGHT, x = zo.win_x, y = zo.win_y)
 				else:
 					frame.place(width = FRAME_HEIGHT, height= FRAME_WIDTH, x = zo.win_x, y = zo.win_y)
-				#time.sleep(3)
 				f_direction()
-			#Place frame when changing direction
+				#Place frame when changing direction
 				turn = ((prev_direction/3) + 4*(int(n)-1))-1
 				turn_x, turn_y = zo.beebots_turn[int(turn)]
 				#print("before zo.win_x, zo.win_y",zo.win_x, zo.win_y)
 				zo.win_x +=turn_x
 				zo.win_y +=turn_y
 				if check_position(): zo.a[FORWARD].config(bg = 'maroon1')
-				#time.sleep(0.25)
 				#print("turn, n, turn_x, turn_y, zo.win_x, zo.win_y",int(turn),n, turn_x, turn_y, zo.win_x, zo.win_y)
 				frame.place(x = zo.win_x, y = zo.win_y)
 
@@ -251,17 +246,17 @@ class App:
 					#print("x", end="")
 					if _x0 == zo.win_x : break
 					_x0 += _x
-					frame.place(x = _x0)
 					if zo.exit_thread: break
-					time.sleep(0.03)
+					frame.place(x = _x0)
+					time.sleep(0.04)
 				#print("")
 				for o in range(int(abs(_y0-zo.win_y))):
 					#print("y", end="")
 					if _y0 == zo.win_y : break
 					_y0 += _y
-					frame.place(y = _y0)
 					if zo.exit_thread: break
-					time.sleep(0.03)
+					frame.place(y = _y0)
+					time.sleep(0.04)
 				#print("")
 				#print("2-_x, _x0, zo.win_x",_x, _x0, zo.win_x)
 				#print("2-_y, _y0, zo.win_y",_y, _y0, zo.win_y)
@@ -285,7 +280,6 @@ class App:
 
 	def begin_now(self):
 		#self.place_frame_do_buttons(zo.start_x,zo.start_y)
-
 		zo.stopped_at_target = False
 		zo.exit_thread = False
 		_thread.start_new_thread(App.start_begin_now,(None, self.frame, lambda: self.do_buttons_direction(), lambda: self.check_window_border() ))
@@ -315,7 +309,7 @@ class App:
 		zo.the_way_to_go = []
 		zo.exit_thread = True
 		zo.stopped_at_target = False
-		time.sleep(0.5) # Time for the task to end
+		#time.sleep(0.5) # Time for the task to end
 		self.place_frame_do_buttons(zo.start_x,zo.start_y)
 
 
@@ -323,7 +317,7 @@ class App:
 		self.destroy_boxes()
 		print("1-zo.win_x, zo.win_y = x0,y0",zo.win_x, zo.win_y, x0,y0)
 		zo.win_x, zo.win_y = x0,y0
-		time.sleep(1)
+		#time.sleep(1)
 		self.frame.place(width = FRAME_WIDTH, height= FRAME_HEIGHT, x = zo.win_x, y = zo.win_y)
 		zo.direction = zo.new_direction
 		self.do_buttons()
@@ -337,9 +331,9 @@ class App:
 	def place_new_frame (self):#Place the frame at a new startposition
 		x0 = random.randint(0,(CANVAS_X/STEP_SIZE)-1)
 		y0 = random.randint(0,(CANVAS_X/STEP_SIZE)-1)
-		zo.start_x,zo.start_y = (CANVAS_PAD_X+1)+0,(START_BUTTON_HEIGHT+ CANVAS_PAD_Y+5)+0
-		zo.new_direction = START_DIRECTION
-		self.place_frame_do_buttons (zo.start_x,zo.start_y)
+		zo.start_x,zo.start_y = (CANVAS_PAD_X+1)+x0*STEP_SIZE,(START_BUTTON_HEIGHT+ CANVAS_PAD_Y+5)+y0*STEP_SIZE
+		zo.new_direction = random.randint(DIRECTION_MIN,DIRECTION_MAX/DIRECTION_STEP)*DIRECTION_STEP
+		self.reset_now()
 
 	def check_window_border (self): # return True if within target
 		print("check_window_border IN")
