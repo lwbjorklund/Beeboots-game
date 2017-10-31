@@ -39,7 +39,7 @@ FRAME_WIDTH = 78
 FRAME_HEIGHT = FRAME_WIDTH # Make Beeboot as a square
 FRAME_DIFF = FRAME_HEIGHT - FRAME_WIDTH
 TARGET_SIZE_20 = 20
-TARGET_SIZE = TARGET_SIZE_20
+TARGET_SIZE = 40 #TARGET_SIZE_20
 RASTER_ADJUST_Y = 0 #STEP_SIZE-STEP_SIZE_20
 RASTER_ADJUST_X = 0 #STEP_SIZE-STEP_SIZE_20
 STOP_COLOR = 'red2'
@@ -62,7 +62,8 @@ zo.text3 = 'Ꙩ\nꙨ','','',''
 zo.win_x = 0
 zo.win_y = 0
 zo.moves = ([[STEP_SIZE,0],[0,STEP_SIZE],[-STEP_SIZE,0],[0,-STEP_SIZE]])
-zo.direction = START_DIRECTION
+zo.new_direction = START_DIRECTION
+zo.direction = zo.new_direction
 zo.exit_thread = False
 zo.o_x0 = 0
 zo.o_y0 = 0
@@ -92,7 +93,7 @@ class App:
 		#self.target_id = None
 		# Type of Beebots turning
 		zo.beebots_turn = zo.beebots_turn_border # Fill in the type of Beebots turning border or middle<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		master.title("Beebots")
+		master.title("Beeboots")
 
         #create canvas
 		self.canvas1 = tk.Canvas(master, relief = tk.FLAT, background = CANVAS_BAKGROUND, width = CANVAS_X, height = CANVAS_Y)
@@ -107,14 +108,17 @@ class App:
 		frame1 = tk.Frame (master)
 		frame1.pack(expand = 1, anchor = tk.N, fill = tk.X)
 		# Creating the START button
-		self.reset_button = tk.Button (frame1, text = "Börja om", command = self.reset_now)
-		self.reset_button.pack(side = tk.RIGHT, padx=5)
+		self.reset_button = tk.Button (frame1, text = "Börja om", command = self.reset_now).pack(side = tk.RIGHT)
+
 		# Creating the RESET button
-		self.start_button = tk.Button (frame1, text = " START", command = self.begin_now)
-		self.start_button.pack(side = tk.LEFT, padx=5)
+		self.start_button = tk.Button (frame1, text = " START", command = self.begin_now).pack(side = tk.LEFT)
+
 		# Creating the Place target button
-		self.target_button = tk.Button (frame1, text = "Ny blomman", command = self.place_target)
-		self.target_button.pack(side = tk.TOP)
+		self.target_button = tk.Button (frame1, text = "Ny blomman", command = self.place_target).pack(side = tk.LEFT,expand = True)
+
+		# Creating the new Place Beeboot start
+		self.target_button = tk.Button (frame1, text = "Ny början", command = self.place_new_frame).pack(side = tk.RIGHT,expand = True)
+
 
 	# Creating the Beeboot with the arrows
 		self.frame = tk.Frame (master, bg= FRAME_BAKGROUND)
@@ -128,8 +132,8 @@ class App:
 
 		zo.button_frame = [self.frame_forward,self.frame_turns,self.frame_turns,self.frame_backward]
 
-		self.place_frame(zo.start_x,zo.start_y)
-		self.do_buttons ()
+		self.place_frame_do_buttons(zo.start_x,zo.start_y)
+
 
 	def do_buttons (self):
 		print("do_buttons IN")
@@ -208,35 +212,31 @@ class App:
 				#print("x,y", x,y)
 				zo.win_x += x
 				zo.win_y += y
-				#if check_position(): zo.a[n].config(bg = 'maroon1')
 			else: #BACKWARD
 				#print("BACKWARD  zo.direction, zo.moves",zo.direction, zo.moves)
 				x,y = zo.moves[int(zo.direction/DIRECTION_STEP)-1]
 				zo.win_x -= x
 				zo.win_y -= y
-				#if check_position(): zo.a[n].config(bg = 'maroon1')
 			#print("1- _x0, zo.win_x",_x0, zo.win_x)
 			#print("1-_y0, zo.win_y", _y0, zo.win_y)
-
 			if n == LEFT or n == RIGHT:
 				if zo.direction == 12 or zo.direction == 6 :
 					frame.place(width = FRAME_WIDTH, height= FRAME_HEIGHT, x = zo.win_x, y = zo.win_y)
 				else:
 					frame.place(width = FRAME_HEIGHT, height= FRAME_WIDTH, x = zo.win_x, y = zo.win_y)
-				#time.sleep(3)
 				f_direction()
-			#Place frame when changing direction
+				#Place frame when changing direction
 				turn = ((prev_direction/3) + 4*(int(n)-1))-1
 				turn_x, turn_y = zo.beebots_turn[int(turn)]
 				#print("before zo.win_x, zo.win_y",zo.win_x, zo.win_y)
 				zo.win_x +=turn_x
 				zo.win_y +=turn_y
 				if check_position(): zo.a[FORWARD].config(bg = 'maroon1')
-				#time.sleep(0.25)
 				#print("turn, n, turn_x, turn_y, zo.win_x, zo.win_y",int(turn),n, turn_x, turn_y, zo.win_x, zo.win_y)
 				frame.place(x = zo.win_x, y = zo.win_y)
 
 			else: #FORWARD and BACKWARD
+				if zo.exit_thread: break
 				check_position()
 				_x= 1 if _x0 - zo.win_x < 0  else -1
 				_y= 1 if _y0 - zo.win_y < 0  else -1
@@ -246,38 +246,40 @@ class App:
 					#print("x", end="")
 					if _x0 == zo.win_x : break
 					_x0 += _x
+					if zo.exit_thread: break
 					frame.place(x = _x0)
-					time.sleep(0.05)
+					time.sleep(0.04)
 				#print("")
 				for o in range(int(abs(_y0-zo.win_y))):
 					#print("y", end="")
 					if _y0 == zo.win_y : break
 					_y0 += _y
+					if zo.exit_thread: break
 					frame.place(y = _y0)
-					time.sleep(0.05)
+					time.sleep(0.04)
 				#print("")
 				#print("2-_x, _x0, zo.win_x",_x, _x0, zo.win_x)
 				#print("2-_y, _y0, zo.win_y",_y, _y0, zo.win_y)
-
+				if zo.exit_thread: break
 				if check_position():
 					zo.a[n].config(bg = 'maroon1')
 				elif zo.at_border == True:
 					zo.a[n].config(bg = STOP_COLOR)
 				else:
 					zo.a[n].config(bg = BLINK_COLOR)
-
-			time.sleep(0.15)
+			if zo.exit_thread: break
+			time.sleep(0.1)
 			zo.a[n].config(bg = lbbg)
-			time.sleep(0.15)
-
+			if zo.exit_thread: break
+			time.sleep(0.1)
 		#return the exit-flag to normal
+		if not zo.exit_thread:
+			_thread.start_new_thread(App.check_if_stopped_at_target,(None,check_position))
 		zo.exit_thread = False
-		_thread.start_new_thread(App.check_if_stopped_at_target,(None,check_position))
 		print("start_begin_now OUT")
 
 	def begin_now(self):
-		self.place_frame(zo.start_x,zo.start_y)
-		self.do_buttons () # Varför behövs detta anrop?
+		#self.place_frame_do_buttons(zo.start_x,zo.start_y)
 		zo.stopped_at_target = False
 		zo.exit_thread = False
 		_thread.start_new_thread(App.start_begin_now,(None, self.frame, lambda: self.do_buttons_direction(), lambda: self.check_window_border() ))
@@ -287,15 +289,19 @@ class App:
 	def check_if_stopped_at_target(self, check_position):
 		print("check_if_stopped_at_target IN")
 		zo.stopped_at_target = True
-		while zo.stopped_at_target:
+		nmb_blink = 20
+		while zo.stopped_at_target and nmb_blink:
+			nmb_blink -=1
 			if check_position():
 				for n in (LEFT, RIGHT): #FORWARD, BACKWARD,
 					zo.a[n].config(bg = TARGET_FOUND_COLOR_1)
 				if not zo.stopped_at_target : break
+				if zo.exit_thread: break
 				time.sleep(0.15)
 				for n in (LEFT, RIGHT):#FORWARD, BACKWARD,
 					zo.a[n].config(bg = TARGET_FOUND_COLOR_2)
 				if not zo.stopped_at_target : break
+				if zo.exit_thread: break
 				time.sleep(0.15)
 		print("check_if_stopped_at_target OUT")
 
@@ -303,24 +309,31 @@ class App:
 		zo.the_way_to_go = []
 		zo.exit_thread = True
 		zo.stopped_at_target = False
-		time.sleep(0.5) # Time for the task to end
-		self.place_frame(zo.start_x,zo.start_y)
+		time.sleep(0.1) # Time for the task to end
+		self.place_frame_do_buttons(zo.start_x,zo.start_y)
+
+
+	def place_frame_do_buttons (self,x0,y0):#Place the frame at startposition
+		self.destroy_boxes()
+		print("1-zo.win_x, zo.win_y = x0,y0",zo.win_x, zo.win_y, x0,y0)
+		zo.win_x, zo.win_y = x0,y0
+		#time.sleep(1)
+		self.frame.place(width = FRAME_WIDTH, height= FRAME_HEIGHT, x = zo.win_x, y = zo.win_y)
+		zo.direction = zo.new_direction
 		self.do_buttons()
 
-	def place_frame (self,x0,y0):#Place the frame at startposition
-		self.destroy_boxes()
-
-		zo.win_x, zo.win_y = x0,y0
-		self.frame.place(width = FRAME_WIDTH, height= FRAME_HEIGHT, x = zo.win_x, y = zo.win_y)
-		zo.direction = START_DIRECTION
 
 	def destroy_boxes (self):
 		#print("knappar", zo.a)
 		for x in zo.a:
 			zo.a[x].destroy()
 
-			#print("destroy knappar",x)
-		#time.sleep(10)
+	def place_new_frame (self):#Place the frame at a new startposition
+		x0 = random.randint(0,(CANVAS_X/STEP_SIZE)-1)
+		y0 = random.randint(0,(CANVAS_X/STEP_SIZE)-1)
+		zo.start_x,zo.start_y = (CANVAS_PAD_X+1)+x0*STEP_SIZE,(START_BUTTON_HEIGHT+ CANVAS_PAD_Y+5)+y0*STEP_SIZE
+		zo.new_direction = random.randint(DIRECTION_MIN,DIRECTION_MAX/DIRECTION_STEP)*DIRECTION_STEP
+		self.reset_now()
 
 	def check_window_border (self): # return True if within target
 		print("check_window_border IN")
@@ -362,22 +375,19 @@ class App:
 
 	def place_target(self):
 
-		#if self.target_id: self.canvas1.delete(self.target_id)
-		#zo.o_x0 = random.randint(CANVAS_PAD_X + TARGET_AREA, CANVAS_X-TARGET_SIZE -TARGET_AREA)
-		#zo.o_y0 = random.randint(CANVAS_PAD_X+TARGET_AREA, CANVAS_Y - FRAME_HEIGHT-TARGET_SIZE-TARGET_AREA)
 		zo.o_x0 = random.randint(0,(CANVAS_X/STEP_SIZE)-1)*STEP_SIZE+(STEP_SIZE/2)-TARGET_SIZE/2
 		zo.o_y0 = random.randint(0,(CANVAS_X/STEP_SIZE)-1)*STEP_SIZE+(STEP_SIZE/2)-TARGET_SIZE/2
 
 		# Make target and place it
 		#zo.o_x0 = 218 #251
 		#zo.o_y0 = 350 #289
+
 		# To resize the image
 		#lbimage = Image.open('./flower.gif')
-		#lbimage = lbimage.resize((21,21), Image.ANTIALIAS)
+		#lbimage = lbimage.resize((TARGET_SIZE,TARGET_SIZE), Image.ANTIALIAS)
 		#lbimage.save('./flower_size.gif')
-		#print("zo.o_x0,zo.o_y0",zo.o_x0,zo.o_y0)
+
 		self.picture = ImageTk.PhotoImage(file = './flower_size.gif')
-		#self.target_id = self.canvas1.create_oval(zo.o_x0, zo.o_y0, zo.o_x0+TARGET_SIZE, zo.o_y0+TARGET_SIZE, fill='red', outline='red')
 		self.canvas1.create_image(zo.o_x0+ (TARGET_SIZE/2), zo.o_y0+(TARGET_SIZE/2), image = self.picture)
 
 
