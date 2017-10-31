@@ -39,7 +39,7 @@ FRAME_WIDTH = 78
 FRAME_HEIGHT = FRAME_WIDTH # Make Beeboot as a square
 FRAME_DIFF = FRAME_HEIGHT - FRAME_WIDTH
 TARGET_SIZE_20 = 20
-TARGET_SIZE = TARGET_SIZE_20
+TARGET_SIZE = 40 #TARGET_SIZE_20
 RASTER_ADJUST_Y = 0 #STEP_SIZE-STEP_SIZE_20
 RASTER_ADJUST_X = 0 #STEP_SIZE-STEP_SIZE_20
 STOP_COLOR = 'red2'
@@ -309,7 +309,7 @@ class App:
 		zo.the_way_to_go = []
 		zo.exit_thread = True
 		zo.stopped_at_target = False
-		#time.sleep(0.5) # Time for the task to end
+		time.sleep(0.1) # Time for the task to end
 		self.place_frame_do_buttons(zo.start_x,zo.start_y)
 
 
@@ -375,22 +375,19 @@ class App:
 
 	def place_target(self):
 
-		#if self.target_id: self.canvas1.delete(self.target_id)
-		#zo.o_x0 = random.randint(CANVAS_PAD_X + TARGET_AREA, CANVAS_X-TARGET_SIZE -TARGET_AREA)
-		#zo.o_y0 = random.randint(CANVAS_PAD_X+TARGET_AREA, CANVAS_Y - FRAME_HEIGHT-TARGET_SIZE-TARGET_AREA)
 		zo.o_x0 = random.randint(0,(CANVAS_X/STEP_SIZE)-1)*STEP_SIZE+(STEP_SIZE/2)-TARGET_SIZE/2
 		zo.o_y0 = random.randint(0,(CANVAS_X/STEP_SIZE)-1)*STEP_SIZE+(STEP_SIZE/2)-TARGET_SIZE/2
 
 		# Make target and place it
 		#zo.o_x0 = 218 #251
 		#zo.o_y0 = 350 #289
+
 		# To resize the image
 		#lbimage = Image.open('./flower.gif')
-		#lbimage = lbimage.resize((21,21), Image.ANTIALIAS)
+		#lbimage = lbimage.resize((TARGET_SIZE,TARGET_SIZE), Image.ANTIALIAS)
 		#lbimage.save('./flower_size.gif')
-		#print("zo.o_x0,zo.o_y0",zo.o_x0,zo.o_y0)
+
 		self.picture = ImageTk.PhotoImage(file = './flower_size.gif')
-		#self.target_id = self.canvas1.create_oval(zo.o_x0, zo.o_y0, zo.o_x0+TARGET_SIZE, zo.o_y0+TARGET_SIZE, fill='red', outline='red')
 		self.canvas1.create_image(zo.o_x0+ (TARGET_SIZE/2), zo.o_y0+(TARGET_SIZE/2), image = self.picture)
 
 
