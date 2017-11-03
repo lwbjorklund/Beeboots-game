@@ -134,6 +134,11 @@ class App:
 
 		self.place_frame_do_buttons(zo.start_x,zo.start_y)
 
+		self.frame.bind_all("<Left>",lambda event, arg=LEFT: self.vilken_direction(arg, event))
+		self.frame.bind_all("<Right>",lambda event, arg=RIGHT: self.vilken_direction(arg, event))
+		self.frame.bind_all("<Up>",lambda event, arg=FORWARD: self.vilken_direction(arg, event))
+		self.frame.bind_all("<Down>",lambda event, arg=BACKWARD: self.vilken_direction(arg, event))
+		self.frame.bind_all("<Return>",self.begin_now)
 
 	def do_buttons (self):
 		print("do_buttons IN")
@@ -180,7 +185,7 @@ class App:
 
 		print("do_buttons_direction OUT")
 
-	def vilken_direction(self, vart):
+	def vilken_direction(self, vart, event=None):
 		zo.the_way_to_go.append(vart)
 		print("vilken_direction: zo.the_way_to_go",zo.the_way_to_go)
 
@@ -278,7 +283,7 @@ class App:
 		zo.exit_thread = False
 		print("start_begin_now OUT")
 
-	def begin_now(self):
+	def begin_now(self, event=None):
 		#self.place_frame_do_buttons(zo.start_x,zo.start_y)
 		zo.stopped_at_target = False
 		zo.exit_thread = False
